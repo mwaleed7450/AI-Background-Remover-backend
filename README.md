@@ -269,3 +269,31 @@ The connection is opened on FastAPI startup and closed on shutdown — both hand
 See [CONTRIBUTING.md](../CONTRIBUTING.md) in the parent repo for branch naming, commit format, and PR rules.
 
 Your branch always goes into this submodule repo (`AI-Background-Remover-backend`), not the parent.
+
+---
+
+## Collaboration & Sharing
+
+- **Share conversations** — export a chat conversation as PDF or plain text.
+  `POST/GET /api/chat-history`, `GET /api/export/{conversation_id}?format=pdf|text`
+- **Collaborative analysis** — multiple users can comment on the same image.
+  `POST/GET /api/collab/{image_id}/comments`
+- **AI action history** — tracks which AI suggestions were shown/applied.
+  `POST/GET /api/actions`
+- **Prompt templates** — save, list, reuse, and delete effective AI prompts.
+  `POST/GET /api/prompts`, `POST /api/prompts/{id}/use`, `DELETE /api/prompts/{id}`
+
+## Analytics & Insights
+
+- **Usage analytics** — tracks which AI features are used most.
+  `POST/GET /api/analytics/usage`
+- **Success metrics** — how often AI suggestions are applied vs. just suggested.
+  `GET /api/analytics/success`
+- **Cost tracking** — logs AI API token usage and estimated cost per feature.
+  `POST/GET /api/analytics/cost`
+- **Quality feedback** — 1–5 star rating on AI suggestions.
+  `POST /api/analytics/feedback`, `GET /api/analytics/feedback/summary`
+
+Usage and action tracking is wired automatically into the `remove_bg`, `enhance`,
+`replace_bg`, `smart_crop`, `recolor`, and `chat` routes via `services/tracking.py`,
+so no extra frontend calls are needed to collect this data.

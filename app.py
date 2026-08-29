@@ -37,6 +37,7 @@ from routes.prompts        import router as prompts_router
 from routes.action_history import router as action_history_router
 from routes.collab         import router as collab_router
 from routes.analytics      import router as analytics_router
+from routes.favorites       import router as favorites_router
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
@@ -94,6 +95,7 @@ app.include_router(prompts_router,        prefix="/api")
 app.include_router(action_history_router, prefix="/api")
 app.include_router(collab_router,         prefix="/api")
 app.include_router(analytics_router,      prefix="/api")
+app.include_router(favorites_router,      prefix="/api")
 
 
 @app.get("/", tags=["Health"])
