@@ -38,7 +38,6 @@ from routes.chat        import router as chat_router
 from routes.image       import router as image_router
 from routes.recolor     import router as recolor_router
 from routes.stats       import router as stats_router
-from routes.prompts        import router as prompts_router
 from routes.action_history import router as action_history_router
 from routes.collab         import router as collab_router
 from routes.analytics      import router as analytics_router
@@ -98,7 +97,6 @@ app.include_router(chat_router,       prefix="/api")
 app.include_router(image_router,      prefix="/api")
 app.include_router(recolor_router,    prefix="/api")
 app.include_router(stats_router,       prefix="/api")
-app.include_router(prompts_router,        prefix="/api")
 app.include_router(action_history_router, prefix="/api")
 app.include_router(collab_router,         prefix="/api")
 app.include_router(analytics_router,      prefix="/api")
