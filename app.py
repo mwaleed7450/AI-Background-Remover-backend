@@ -20,7 +20,6 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 from services.database   import connect_db, close_db
-from services.quota      import setup_quota_indexes
 from services.cleanup    import start_cleanup_task, stop_cleanup_task
 from services.job_queue  import job_queue
 from services.bg_removal import warm_up
@@ -50,7 +49,6 @@ load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
-    await setup_quota_indexes()
     start_cleanup_task()
     await job_queue.start()
     # Pre-load AI model sessions so the first request isn't slow.

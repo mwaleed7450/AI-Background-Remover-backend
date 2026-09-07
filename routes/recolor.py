@@ -21,7 +21,6 @@ from fastapi.responses    import JSONResponse
 import aiofiles
 
 from services.auth        import get_current_user
-from services.quota       import check_and_increment_quota
 from services.storage     import save_file
 from services.database    import get_collection
 from services.recolor     import recolor_region
@@ -57,8 +56,6 @@ async def recolor_endpoint(
     - **strength**     0.0 = no change · 1.0 = full recolour (default)
     - **feather**      Gaussian blur applied to mask edges for soft blending (default 15 px)
     """
-    await check_and_increment_quota(current_user.user_id)
-
     if image.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,

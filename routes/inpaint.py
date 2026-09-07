@@ -11,7 +11,6 @@ import json
 
 from services.database import get_collection
 from services.auth import get_current_user
-from services.quota import check_and_increment_quota
 from services.storage import save_file
 from services.tracking import track_usage, track_action
 from models.user import UserOut
@@ -34,8 +33,6 @@ async def inpaint_endpoint(
     mask_points: Optional[str] = Form(None),
     current_user: UserOut = Depends(get_current_user),
 ):
-    await check_and_increment_quota(current_user.user_id)
-
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type. Use JPEG, PNG, or WebP.")
     

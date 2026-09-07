@@ -7,7 +7,6 @@ from services.database   import get_collection
 from services.bg_removal import remove_background, QUALITY_OPTIONS
 from services.smart_crop import smart_crop, get_aspect_ratio_keys
 from services.auth       import get_current_user
-from services.quota      import check_and_increment_quota
 from services.storage    import save_file
 from services.tracking   import track_usage, track_action
 from models.user         import UserOut
@@ -38,10 +37,7 @@ async def smart_crop_endpoint(
     - **quality** `fast` (U2Net) or `quality` (BiRefNet) — controls the
       internal background-removal step used to detect the subject bbox.
     """
-    await check_and_increment_quota(current_user.user_id)
-
     if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(status_code=400, detail="Unsupported file type. Use JPEG, PNG, or WebP.")
 
     contents = await file.read()
     if len(contents) > MAX_SIZE_MB * 1024 * 1024:

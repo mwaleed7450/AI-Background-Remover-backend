@@ -42,7 +42,6 @@ from fastapi.responses import Response, JSONResponse, StreamingResponse, Redirec
 from fastapi import Form
 from models.user    import UserOut
 from services.auth  import get_current_user, decode_token
-from services.quota import check_and_increment_quota, refund_quota
 from services.batch import create_job, get_job, stream_zip
 from services.job_queue import job_queue
 from services.job_events import job_events
@@ -86,7 +85,7 @@ async def batch_start(
             detail=f"quality must be one of: {', '.join(QUALITY_OPTIONS)}.",
         )
 
-    # ── Phase 1: validate and read every file before touching quota ──────
+    # ── Phase 1: validate and read every file ────────────────────────────
     validated: list[tuple[bytes, str]] = []
 
     for upload in files:
@@ -107,18 +106,7 @@ async def batch_start(
         safe_name = os.path.basename(upload.filename or "upload")
         validated.append((contents, safe_name))
 
-    # ── Phase 2: charge quota for every validated file ───────────────────
-    charged = 0
-    try:
-        for _ in validated:
-            await check_and_increment_quota(current_user.user_id)
-            charged += 1
-    except Exception:
-        if charged:
-            await refund_quota(current_user.user_id, charged)
-        raise
-
-    # ── Phase 3: write files to disk ─────────────────────────────────────
+    # ── Phase 2: write files to disk ─────────────────────────────────────
     file_entries: list[dict] = []
 
     try:
@@ -134,7 +122,6 @@ async def batch_start(
                 "upload_path":   upload_path,
             })
     except Exception:
-        await refund_quota(current_user.user_id, charged)
         raise
 
     job_id = await create_job(file_entries, user_id=current_user.user_id, quality=quality)

@@ -5,7 +5,6 @@ from typing import Dict, Any
 from models.user import UserOut
 from services.auth import get_current_user
 from services.database import get_collection
-from services.quota import get_quota_status
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -15,19 +14,12 @@ OUTPUT_DIR = "output"
 async def get_user_stats(current_user: UserOut = Depends(get_current_user)) -> Dict[str, Any]:
     """
     Return aggregated usage statistics for the dashboard:
-    - Quota usage (used, limit)
     - Operation counts (remove_bg, enhance, replace_bg, smart_crop, recolor)
     - Storage used (in bytes)
     """
     uid = current_user.user_id
 
-    # 1. Quota
-    try:
-        quota_data = await get_quota_status(uid)
-    except Exception:
-        quota_data = {"used": 0, "limit": 0, "remaining": 0}
-
-    # 2. History Counts & Storage
+    # History Counts & Storage
     sources = [
         ("history",            "remove_bg",   "output_filename"),
         ("enhance_history",    "enhance",     "output_filename"),
@@ -73,7 +65,6 @@ async def get_user_stats(current_user: UserOut = Depends(get_current_user)) -> D
             pass
 
     return {
-        "quota": quota_data,
         "operations": operations,
         "total_images": total_images,
         "storage_bytes": storage_bytes
