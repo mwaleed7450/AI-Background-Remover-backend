@@ -6,7 +6,6 @@ POST /api/auth/login           — exchange credentials for tokens
 POST /api/auth/refresh         — exchange refresh cookie for a new access token
 POST /api/auth/logout          — clear the refresh token cookie
 GET  /api/auth/me              — return current user (requires access token)
-GET  /api/auth/quota           — return daily quota usage for current user
 POST /api/auth/forgot-password — send a password-reset email
 POST /api/auth/reset-password  — consume reset token and set a new password
 """
@@ -40,7 +39,6 @@ from services.auth import (
     get_current_user, REFRESH_COOKIE_NAME, REFRESH_TOKEN_EXPIRE_DAYS,
 )
 from services.database import get_collection, is_db_connected
-from services.quota    import get_quota_status
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -253,23 +251,6 @@ async def logout(response: Response):
 async def me(current_user: UserOut = Depends(get_current_user)):
     """Return the currently authenticated user's profile."""
     return current_user
-
-
-# ── Quota ──────────────────────────────────────────────────────────────────
-
-@router.get("/quota")
-async def quota(current_user: UserOut = Depends(get_current_user)):
-    """
-    Return the authenticated user's current daily quota usage.
-
-    Response fields:
-    - **used**      Operations consumed today (UTC day)
-    - **limit**     Daily limit (0 means disabled)
-    - **remaining** Operations left today (null when disabled)
-    - **resets_at** ISO-8601 timestamp of next quota reset (midnight UTC)
-    - **disabled**  True when quota enforcement is turned off
-    """
-    return await get_quota_status(current_user.user_id)
 
 
 # ── Update Profile ──────────────────────────────────────────────────────

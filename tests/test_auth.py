@@ -5,7 +5,6 @@ Tests for authentication routes:
   POST /api/auth/refresh
   POST /api/auth/logout
   GET  /api/auth/me
-  GET  /api/auth/quota
 """
 from __future__ import annotations
 
@@ -113,25 +112,6 @@ class TestGetMe:
         """Invalid bearer token returns 401."""
         resp = await client.get("/api/auth/me", headers={"Authorization": "Bearer not.a.valid.jwt"})
         assert resp.status_code == 401
-
-
-# ── Quota ─────────────────────────────────────────────────────────────────────
-
-class TestQuota:
-    async def test_get_quota_authenticated(self, client: httpx.AsyncClient, auth_headers: dict):
-        """Authenticated user can retrieve their quota."""
-        resp = await client.get("/api/auth/quota", headers=auth_headers)
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "used" in data
-        assert "limit" in data
-        assert data["used"] >= 0
-
-    async def test_get_quota_unauthenticated(self, client: httpx.AsyncClient):
-        """Unauthenticated quota request returns 401."""
-        resp = await client.get("/api/auth/quota")
-        assert resp.status_code == 401
-
 
 # ── Logout ────────────────────────────────────────────────────────────────────
 

@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse, Response
 from services.bg_removal  import remove_background_bytes, QUALITY_OPTIONS
 from services.database    import get_collection
 from services.auth        import get_current_user
-from services.quota       import check_and_increment_quota
 from services.storage     import save_file
 from services.tracking    import track_usage, track_action
 from models.user          import UserOut
@@ -40,8 +39,6 @@ async def remove_bg_endpoint(
     in memory — no temporary upload file is written to disk, saving one
     extra I/O round-trip on every request.
     """
-    await check_and_increment_quota(current_user.user_id)
-
     if quality not in QUALITY_OPTIONS:
         raise HTTPException(
             status_code=400,

@@ -7,7 +7,6 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 
 from services.auth import get_current_user
-from services.quota import check_and_increment_quota
 from services.tracking import track_usage
 from models.user import UserOut
 
@@ -48,8 +47,6 @@ async def vectorize_endpoint(
     current_user: UserOut = Depends(get_current_user),
 ):
     """Convert a PNG/JPG image to an SVG vector using vtracer."""
-    await check_and_increment_quota(current_user.user_id)
-
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported file type. Use JPEG, PNG, or WebP.")
 
