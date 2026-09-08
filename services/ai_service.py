@@ -186,40 +186,57 @@ class AIService:
         reply = self._clean_text(text)
         return reply, thinking
 
-    async def chat(self, message: str, image_bytes: Optional[bytes] = None) -> Tuple[str, Optional[str]]:
-        """Chat with AI assistant with retry logic and enhanced error handling."""
+    async def chat(
+        self,
+        message: str,
+        image_bytes: Optional[bytes] = None,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> Tuple[str, Optional[str]]:
+        """Chat with AI assistant with retry logic and enhanced error handling.
+
+        history: optional list of {"role": "user"|"assistant", "content": str}
+        prior turns, given as real conversation context (not a pasted prefix).
+        """
         self._verify_configuration()
+        history = history or []
 
         async def _chat_impl() -> Tuple[str, Optional[str]]:
+            system_prompt = (
+                "You are a professional designer and helpful assistant for the AI Background Remover application. "
+                "You are answering user queries about the uploaded image. Help them with background recommendations, editing advice, and captions."
+            )
+
             if self.provider == "gemini":
                 if genai is None:
                     raise RuntimeError("Gemini package is not available.")
-                model = genai.GenerativeModel(self.chat_model)
+                model = genai.GenerativeModel(self.chat_model, system_instruction=system_prompt)
+
+                # Build real multi-turn Gemini history: list of {"role", "parts"}
+                gemini_history = []
+                for turn in history:
+                    role = "model" if turn.get("role") == "assistant" else "user"
+                    gemini_history.append({"role": role, "parts": [turn.get("content", "")]})
+
+                chat_session = model.start_chat(history=gemini_history)
+
                 if image_bytes:
                     img = Image.open(BytesIO(image_bytes)).convert("RGB")
-                    prompt = (
-                        "You are a professional designer and helpful assistant for the AI Background Remover application. "
-                        "You are answering user queries about the uploaded image. Help them with background recommendations, editing advice, and captions.\n\n"
-                        f"User Message: {message}"
-                    )
-                    response = await model.generate_content_async([prompt, img])
+                    response = await chat_session.send_message_async([message, img])
                 else:
-                    response = await model.generate_content_async(message)
+                    response = await chat_session.send_message_async(message)
 
                 raw_reply = response.text or "No response from AI."
                 return self._extract_thinking(raw_reply)
             else:
                 if self.client is None:
                     raise RuntimeError("Groq client is not initialized.")
-                messages: List[Dict[str, Any]] = [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a professional designer and helpful assistant for the AI Background Remover application. "
-                            "You are answering user queries about the uploaded image. Help them with background recommendations, editing advice, and captions."
-                        )
-                    }
-                ]
+                messages: List[Dict[str, Any]] = [{"role": "system", "content": system_prompt}]
+
+                # Real multi-turn history for OpenAI-style chat completions
+                for turn in history:
+                    role = "assistant" if turn.get("role") == "assistant" else "user"
+                    messages.append({"role": role, "content": turn.get("content", "")})
+
                 if image_bytes:
                     base64_image = base64.b64encode(image_bytes).decode('utf-8')
                     image_url = f"data:image/jpeg;base64,{base64_image}"

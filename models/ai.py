@@ -31,3 +31,14 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     thinking: Optional[str] = None
+    conversation_id: str
+
+
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
+class ChatHistoryResponse(BaseModel):
+    conversation_id: str
+    messages: list[ChatMessage]
