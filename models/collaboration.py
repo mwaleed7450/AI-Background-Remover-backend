@@ -29,22 +29,6 @@ class ExportFormat(BaseModel):
     format: Literal["pdf", "text"] = "text"
 
 
-class PromptTemplateCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=120)
-    prompt_text: str = Field(..., min_length=1, max_length=4000)
-    tags: list[str] = Field(default_factory=list)
-
-
-class PromptTemplateOut(BaseModel):
-    template_id: str
-    user_id: str
-    title: str
-    prompt_text: str
-    tags: list[str]
-    use_count: int = 0
-    created_at: datetime
-
-
 class ActionLogCreate(BaseModel):
     image_id: str
     action_type: str = Field(..., description="e.g. remove_bg, enhance, replace_bg, smart_crop, recolor")

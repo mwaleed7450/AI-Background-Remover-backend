@@ -1,5 +1,14 @@
+from __future__ import annotations
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
+
+
+class ColorPaletteItem(BaseModel):
+    hex: str
+    name: str
+    percentage: int = 20
+    text_color: Optional[str] = "#ffffff"
+    use_case: Optional[str] = "Accent"
 
 
 class ImageAnalysisResponse(BaseModel):
@@ -8,6 +17,13 @@ class ImageAnalysisResponse(BaseModel):
     background_description: str
     suggested_use: str
     editing_recommendations: list[str]
+    quality_score: Optional[int] = 92
+    quality_rating: Optional[str] = "Excellent · Studio Ready"
+    edge_score: Optional[int] = 94
+    lighting_score: Optional[int] = 90
+    sharpness_score: Optional[int] = 91
+    isolation_score: Optional[int] = 95
+    color_palette: Optional[list[ColorPaletteItem]] = None
 
 
 class CaptionResponse(BaseModel):
@@ -32,6 +48,7 @@ class ChatResponse(BaseModel):
     reply: str
     thinking: Optional[str] = None
     conversation_id: str
+    action: Optional[dict] = None
 
 
 class ChatMessage(BaseModel):
@@ -53,3 +70,59 @@ class ConversationSummary(BaseModel):
 
 class ConversationListResponse(BaseModel):
     conversations: list[ConversationSummary]
+
+
+class DetectedObject(BaseModel):
+    label: str
+    box_2d: list[int]
+    confidence: float
+
+
+class StyleTransferRecommendation(BaseModel):
+    style: str
+    description: str
+    prompts: str
+
+
+class CompositionAnalysis(BaseModel):
+    rule_of_thirds: str
+    leading_lines: str
+    balance: str
+    crop_recommendation: str
+
+
+class OptimalEnhancementSettings(BaseModel):
+    brightness: float
+    contrast: float
+    saturation: float
+    sharpness: float
+    denoise: bool
+    auto_wb: bool
+    denoise_strength: int
+
+
+class SuggestedCropSettings(BaseModel):
+    aspect_ratio: str
+    padding_pct: float
+
+
+class AdvancedAnalysisResponse(BaseModel):
+    object_detection: list[DetectedObject]
+    color_palette: list[ColorPaletteItem]
+    style_transfer: list[StyleTransferRecommendation]
+    composition: CompositionAnalysis
+    suggested_backgrounds: list[str]
+    optimal_enhancement: OptimalEnhancementSettings
+    suggested_crop: SuggestedCropSettings
+    suggested_filename: str
+
+
+class BatchAdvancedAnalysisItem(BaseModel):
+    filename: str
+    status: str
+    analysis: Optional[AdvancedAnalysisResponse] = None
+    error: Optional[str] = None
+
+
+class BatchAdvancedAnalysisResponse(BaseModel):
+    results: list[BatchAdvancedAnalysisItem]

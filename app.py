@@ -1,5 +1,9 @@
 import os
 import sys
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -16,7 +20,6 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 from services.database   import connect_db, close_db
-from services.quota      import setup_quota_indexes
 from services.cleanup    import start_cleanup_task, stop_cleanup_task
 from services.job_queue  import job_queue
 from services.bg_removal import warm_up
@@ -33,11 +36,13 @@ from routes.batch       import router as batch_router
 from routes.chat        import router as chat_router
 from routes.image       import router as image_router
 from routes.recolor     import router as recolor_router
-from routes.prompts        import router as prompts_router
+from routes.stats       import router as stats_router
 from routes.action_history import router as action_history_router
 from routes.collab         import router as collab_router
 from routes.analytics      import router as analytics_router
 from routes.favorites       import router as favorites_router
+from routes.inpaint        import router as inpaint_router
+from routes.vectorize      import router as vectorize_router
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
@@ -45,7 +50,6 @@ load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_db()
-    await setup_quota_indexes()
     start_cleanup_task()
     await job_queue.start()
     # Pre-load AI model sessions so the first request isn't slow.
@@ -91,13 +95,16 @@ app.include_router(batch_router,      prefix="/api")
 app.include_router(chat_router,       prefix="/api")
 app.include_router(image_router,      prefix="/api")
 app.include_router(recolor_router,    prefix="/api")
-app.include_router(prompts_router,        prefix="/api")
+app.include_router(stats_router,       prefix="/api")
 app.include_router(action_history_router, prefix="/api")
 app.include_router(collab_router,         prefix="/api")
 app.include_router(analytics_router,      prefix="/api")
 app.include_router(favorites_router,      prefix="/api")
+app.include_router(inpaint_router,        prefix="/api")
+app.include_router(vectorize_router,      prefix="/api")
 
 
 @app.get("/", tags=["Health"])
 async def root():
     return {"status": "ok", "message": "AI Background Remover API v2 is running."}
+

@@ -54,7 +54,7 @@ async def chat(
 
         conv_id = conversation_id or str(uuid.uuid4())
 
-        reply, thinking = await ai_service.chat(message, image_bytes, history=parsed_history)
+        reply, thinking, action = await ai_service.chat(message, image_bytes, history=parsed_history)
 
         # ── Persist this turn (user + assistant messages) to the conversation ──
         try:
@@ -100,7 +100,7 @@ async def chat(
             output_tokens=output_tokens,
         )
 
-        return ChatResponse(reply=reply, thinking=thinking, conversation_id=conv_id)
+        return ChatResponse(reply=reply, thinking=thinking, conversation_id=conv_id, action=action)
     except HTTPException:
         raise
     except ValueError as ve:
