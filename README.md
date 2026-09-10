@@ -297,3 +297,25 @@ Your branch always goes into this submodule repo (`AI-Background-Remover-backend
 Usage and action tracking is wired automatically into the `remove_bg`, `enhance`,
 `replace_bg`, `smart_crop`, `recolor`, and `chat` routes via `services/tracking.py`,
 so no extra frontend calls are needed to collect this data.
+
+---
+
+## Persistent Chat History & Multi-Turn Memory
+
+- **Real conversation memory** — chat messages are sent to the AI as actual
+  multi-turn history (a Gemini chat session / OpenAI-style message list), not
+  a pasted text prefix, so the assistant remembers prior turns properly.
+  `POST /api/chat` now accepts an optional `conversation_id` and a JSON-encoded
+  `history` array (`[{role, content}, ...]`) in the form body.
+- **Persisted conversations** — every chat turn is saved per user in a new
+  `conversations` collection, keyed by `user_id` + `conversation_id`, so a
+  conversation survives page refreshes and reopening the widget.
+- **Restore last conversation** — `GET /api/chat/history` returns the most
+  recently updated conversation (or a specific one via `?conversation_id=`).
+- **Browse all past conversations** — `GET /api/chat/conversations` lists all
+  of a user's conversations (preview text, message count, last-updated time),
+  powering a dedicated **History tab** in the chatbot widget so users can
+  reopen any earlier conversation, not just the latest one.
+- **Clear conversation** — `DELETE /api/chat/history` clears a conversation
+  (or all of a user's conversations), wired to a "Clear conversation" button
+  in the widget header.

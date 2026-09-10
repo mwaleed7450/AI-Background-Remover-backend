@@ -42,3 +42,14 @@ class ChatMessage(BaseModel):
 class ChatHistoryResponse(BaseModel):
     conversation_id: str
     messages: list[ChatMessage]
+
+
+class ConversationSummary(BaseModel):
+    conversation_id: str
+    preview: str
+    message_count: int
+    updated_at: str
+
+
+class ConversationListResponse(BaseModel):
+    conversations: list[ConversationSummary]

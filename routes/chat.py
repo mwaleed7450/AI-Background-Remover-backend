@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status, File, UploadFile, Form, Depends, Query
 from typing import Optional, List
-from models.ai import ChatResponse, ChatHistoryResponse, ChatMessage
+from models.ai import ChatResponse, ChatHistoryResponse, ChatMessage, ConversationSummary, ConversationListResponse
 from services.ai_service import AIService
 from services.image_service import ImageService
 from services.auth import get_current_user
@@ -113,6 +113,36 @@ async def chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@router.get("/conversations", response_model=ConversationListResponse)
+async def list_conversations(
+    current_user: UserOut = Depends(get_current_user),
+):
+    """List all of the current user's past conversations, most recently updated first."""
+    try:
+        collection = get_collection("conversations")
+        cursor = collection.find(
+            {"user_id": current_user.user_id}
+        ).sort("updated_at", -1).limit(50)
+        docs = await cursor.to_list(length=50)
+
+        summaries = []
+        for doc in docs:
+            messages = doc.get("messages", [])
+            last_msg = messages[-1]["content"] if messages else ""
+            preview = (last_msg[:80] + "…") if len(last_msg) > 80 else last_msg
+            updated_at = doc.get("updated_at") or doc.get("created_at")
+            summaries.append(ConversationSummary(
+                conversation_id=doc["conversation_id"],
+                preview=preview or "(empty conversation)",
+                message_count=len(messages),
+                updated_at=updated_at.isoformat() if updated_at else "",
+            ))
+
+        return ConversationListResponse(conversations=summaries)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not list conversations: {exc}")
 
 
 @router.get("/history", response_model=ChatHistoryResponse)
